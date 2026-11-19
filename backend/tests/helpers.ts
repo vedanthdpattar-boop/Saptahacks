@@ -6,6 +6,7 @@ export function bindings(overrides: Partial<Bindings> = {}): Bindings {
   return {
     DB: env.DB,
     FILES: env.FILES,
+    FILES_KV: env.FILES_KV,
     AI: { run: vi.fn() } as unknown as Ai,
     API_RATE_LIMITER: { limit: vi.fn().mockResolvedValue({ success: true }) },
     RESEARCH_RATE_LIMITER: {

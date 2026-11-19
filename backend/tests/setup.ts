@@ -5,6 +5,7 @@ declare global {
     interface Env {
       DB: D1Database;
       FILES: R2Bucket;
+      FILES_KV: KVNamespace;
       TEST_MIGRATIONS: D1Migration[];
     }
   }
@@ -18,4 +19,6 @@ beforeEach(async () => {
   const objects = await env.FILES.list();
   if (objects.objects.length)
     await env.FILES.delete(objects.objects.map((o) => o.key));
+  const keys = await env.FILES_KV.list();
+  await Promise.all(keys.keys.map(({ name }) => env.FILES_KV.delete(name)));
 });

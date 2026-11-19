@@ -123,6 +123,53 @@ describe("complete API workflow with real local D1/R2 and synthetic external ser
       (await new Repository(env.DB).reportData(doc.id)).evidence,
     ).toHaveLength(data.evidence.length);
   });
+  it("runs the complete verification workflow with private KV storage", async () => {
+    vi.stubGlobal("fetch", syntheticFetch());
+    const b = bindings({
+      FILES: undefined,
+      AI: { run: syntheticAiRun() } as unknown as Ai,
+    });
+    const doc = await upload(b);
+    const headers = auth(doc.accessToken);
+    expect(
+      (
+        await app.request(
+          `/api/documents/${doc.id}/extract`,
+          { method: "POST", headers },
+          b,
+        )
+      ).status,
+    ).toBe(202);
+    const claim = (await new Repository(env.DB).reportData(doc.id)).claims[0];
+    expect(
+      (
+        await app.request(
+          `/api/claims/${claim.id}/verify`,
+          { method: "POST", headers },
+          b,
+        )
+      ).status,
+    ).toBe(200);
+    const response = await app.request(
+      `/api/documents/${doc.id}/report`,
+      { headers },
+      b,
+    );
+    expect(response.status).toBe(200);
+    const report = await response.json();
+    expect(report).toMatchObject({
+      document: { status: "complete", mode: "live" },
+      claims: [{ verdict: "Partially Supported", evidence: syntheticPassage }],
+      summary: {
+        totalClaims: 1,
+        verifiedClaims: 1,
+        partiallySupportedClaims: 1,
+      },
+    });
+    expect(JSON.stringify(report)).not.toMatch(
+      /access_token_hash|pdf_key|text_key|accessToken/,
+    );
+  });
   it("keeps missing publications as review findings and protects job ownership", async () => {
     vi.stubGlobal(
       "fetch",

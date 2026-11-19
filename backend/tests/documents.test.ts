@@ -5,6 +5,111 @@ import { Repository } from "../src/database/repository";
 import { auth, bindings, upload, uploadForm } from "./helpers";
 
 describe("private document API and real D1/R2 bindings", () => {
+  it("keeps a 10 MiB PDF and its text intact in private KV without R2", async () => {
+    const pdf = new Uint8Array(10 * 1024 * 1024).fill(255);
+    pdf.set(new TextEncoder().encode("%PDF-1.7\n"));
+    const form = uploadForm();
+    form.set("file", new File([pdf], "paper.pdf", { type: "application/pdf" }));
+    const b = bindings({ FILES: undefined });
+    const response = await app.request(
+      "/api/documents",
+      { method: "POST", body: form },
+      b,
+    );
+    expect(response.status).toBe(201);
+    const body = (await response.json()) as { id: string; accessToken: string };
+    const row = (await new Repository(env.DB).document(body.id))!;
+    const stored = (await env.FILES_KV.get(row.pdf_key, "arrayBuffer"))!;
+    expect(stored.byteLength).toBe(pdf.byteLength);
+    expect(
+      new Uint8Array(await crypto.subtle.digest("SHA-256", stored)),
+    ).toEqual(new Uint8Array(await crypto.subtle.digest("SHA-256", pdf)));
+    expect(await env.FILES_KV.get(row.text_key)).toBe(
+      form.get("extractedText"),
+    );
+    expect((await env.FILES.list()).objects).toHaveLength(0);
+    expect((await app.request(`/api/documents/${body.id}`, {}, b)).status).toBe(
+      401,
+    );
+    expect(JSON.stringify(body)).not.toMatch(
+      /pdf_key|text_key|access_token_hash/,
+    );
+    pdf[0] = 0;
+    form.set(
+      "file",
+      new File(["%PDF-1.7", pdf], "large.pdf", { type: "application/pdf" }),
+    );
+    expect(
+      (await app.request("/api/documents", { method: "POST", body: form }, b))
+        .status,
+    ).toBe(413);
+    expect((await env.FILES_KV.list()).keys).toHaveLength(2);
+  });
+  it("cleans up private KV on database failure and a partial KV write", async () => {
+    const b = bindings({ FILES: undefined });
+    const insert = vi
+      .spyOn(Repository.prototype, "insertDocument")
+      .mockRejectedValueOnce(new Error("synthetic DB failure"));
+    expect(
+      (
+        await app.request(
+          "/api/documents",
+          { method: "POST", body: uploadForm() },
+          b,
+        )
+      ).status,
+    ).toBe(500);
+    expect((await env.FILES_KV.list()).keys).toHaveLength(0);
+    insert.mockRestore();
+    const kv = {
+      put: vi
+        .fn()
+        .mockImplementationOnce((key: string, value: ArrayBuffer) =>
+          env.FILES_KV.put(key, value),
+        )
+        .mockRejectedValueOnce(new Error("synthetic KV quota failure")),
+      delete: vi.fn((key: string) => env.FILES_KV.delete(key)),
+    };
+    expect(
+      (
+        await app.request(
+          "/api/documents",
+          { method: "POST", body: uploadForm() },
+          bindings({
+            FILES: undefined,
+            FILES_KV: kv as unknown as KVNamespace,
+          }),
+        )
+      ).status,
+    ).toBe(500);
+    expect(kv.delete).toHaveBeenCalledTimes(2);
+    expect((await env.FILES_KV.list()).keys).toHaveLength(0);
+    expect(
+      await env.DB.prepare("SELECT count(*) AS n FROM documents").first("n"),
+    ).toBe(0);
+  });
+  it("keeps a delayed KV read retryable without sending missing text to AI", async () => {
+    const b = bindings({ FILES: undefined });
+    const doc = await upload(b);
+    const response = await app.request(
+      `/api/documents/${doc.id}/extract`,
+      { method: "POST", headers: auth(doc.accessToken) },
+      {
+        ...b,
+        FILES_KV: {
+          get: vi.fn().mockResolvedValue(null),
+        } as unknown as KVNamespace,
+      },
+    );
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({
+      error: { code: "document_text_missing" },
+    });
+    expect(b.AI.run).not.toHaveBeenCalled();
+    expect(
+      (await new Repository(env.DB).document(doc.id))!.lease_token,
+    ).toBeNull();
+  });
   it("checks database health and sends exact CORS origins", async () => {
     const b = bindings();
     const response = await app.request(
