@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+.env.local
+*.tsbuildinfo
+public/pdfjs/
+test-results/
+playwright-report/
