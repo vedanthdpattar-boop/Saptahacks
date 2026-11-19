@@ -59,22 +59,40 @@ export function splitDocumentText(
 export async function extractClaims(
   chunk: TextChunk,
   provider: AiProvider,
+  documentText = chunk.text,
 ): Promise<Extraction> {
+  const references = parseReferences("validation", documentText).citations;
+  const bodyText = references.reduce(
+    (body, reference) => body.replaceAll(reference.reference_text, ""),
+    documentText,
+  );
+  const originalQuote = (quote: string) => {
+    if (chunk.text.includes(quote)) return quote;
+    // Recover PDF layout whitespace only; words, punctuation and numbers stay exact.
+    const pattern = quote.trim().split(/\s+/)
+      .map((token) => token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .join("\\s+");
+    return chunk.text.match(new RegExp(pattern))?.[0];
+  };
   return structuredOutput(
     provider,
     extractionPrompt,
     { documentText: chunk.text, suppliedPage: chunk.page },
     extractionSchema,
     (value) => {
-      for (const claim of value.claims)
-        if (!chunk.text.includes(claim.text))
-          throw new Error("claim_not_verbatim");
+      for (const claim of value.claims) {
+        const quote = originalQuote(claim.text);
+        if (!quote) throw new Error("claim_not_verbatim");
+        claim.text = quote;
+      }
+      value.claims = value.claims.filter((claim) => bodyText.includes(claim.text));
       for (const citation of value.citations) {
-        if (
-          !chunk.text.includes(citation.referenceText) ||
-          !canonicalCitationKey(citation.key)
-        )
-          throw new Error("reference_not_verbatim");
+        const quote = originalQuote(citation.referenceText);
+        const key = canonicalCitationKey(citation.key);
+        if (!quote || !key) throw new Error("reference_not_verbatim");
+        citation.referenceText = references.find((reference) =>
+          reference.citation_key === key && reference.reference_text.includes(quote),
+        )?.reference_text ?? quote;
         const parsed = parseReference(
           "validation",
           citation.key,
@@ -147,7 +165,7 @@ export async function processExtraction(env: Bindings, document: DocumentRow) {
     if (job.cursor < chunks.length) {
       await repo.stage(document.id, "extraction");
       const chunk = chunks[job.cursor];
-      const extracted = await extractClaims(chunk, aiProvider(env));
+      const extracted = await extractClaims(chunk, aiProvider(env), text);
       const data = await repo.reportData(document.id);
       const uniqueTexts = new Set([
         ...data.claims.map((c) => c.claim_text),

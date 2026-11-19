@@ -68,7 +68,8 @@ export function parseReference(
   key: string,
   referenceText: string,
 ): CitationRow {
-  const text = referenceText.replace(/^\s*(?:\[\d+\]|\d+[.)])\s*/, "").trim();
+  const text = referenceText.replace(/^\s*(?:\[\d+\]|\d+[.)])\s*/, "")
+    .replace(/\s+/g, " ").trim();
   const yearMatch = text.match(/\b((?:1[5-9]|20)\d{2})[a-z]?\b/);
   const year = yearMatch ? Number(yearMatch[1]) : null;
   const doiMatch = text.match(
