@@ -9,6 +9,7 @@ import {
   ErrorState,
   formatDate,
   LoadingState,
+  NoClaimsState,
   PageHeader,
   ReportTabs,
   VerdictSummary,
@@ -81,6 +82,7 @@ export function ReportPage() {
   const [selectedClaim, setSelectedClaim] = useState("");
   if (error) return <ErrorState message={error} retry={retry} />;
   if (!report) return <LoadingState />;
+  if (!report.claims.length) return <NoClaimsState document={report.document} />;
   const claim =
     report.claims.find((c) => c.id === selectedClaim) ?? report.claims[0];
   const reviewClaims = report.claims.filter((c) => c.verdict !== "Supported");

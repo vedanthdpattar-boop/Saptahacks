@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import {
   Badge,
-  EmptyState,
+  NoClaimsState,
   ErrorState,
   LoadingState,
   PageHeader,
@@ -29,12 +29,7 @@ export function EvidenceGraphPage() {
   const claim =
     report.claims.find((c) => c.id === params.get("claim")) ?? report.claims[0];
   if (!claim)
-    return (
-      <EmptyState
-        title="No evidence graph yet"
-        description="This report contains no claims."
-      />
-    );
+    return <NoClaimsState document={report.document} />;
   const nodes = [
     {
       label: "Original claim",

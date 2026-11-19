@@ -69,7 +69,7 @@ export function UploadPage() {
       <PageHeader
         eyebrow="A closer reading starts here"
         title="Upload your research"
-        description="Select a text-based PDF. We’ll extract its text in your browser before analysis."
+        description="Choose an academic paper with scientific claims and references. CiteVerify checks research evidence; résumé credentials are not supported."
       />
       <div className="upload-layout">
         <section className="panel upload-panel">

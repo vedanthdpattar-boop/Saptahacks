@@ -8,6 +8,7 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
+  NoClaimsState,
   PageHeader,
   ReportTabs,
   VerdictSummary,
@@ -42,6 +43,7 @@ export function ResultsPage() {
   );
   if (error) return <ErrorState message={error} retry={retry} />;
   if (!report) return <LoadingState />;
+  if (!report.claims.length) return <NoClaimsState document={report.document} />;
   return (
     <>
       {report.document.mode === "demo" && !DEMO_MODE && (
@@ -173,26 +175,18 @@ export function ResultsPage() {
           </div>
         ) : (
           <EmptyState
-            title={
-              report.claims.length ? "No matching claims" : "No claims found"
-            }
-            description={
-              report.claims.length
-                ? "Try another search or verification status."
-                : "The backend returned a report with no claims."
-            }
+            title="No matching claims"
+            description="Try another search or verification status."
             action={
-              report.claims.length ? (
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setSearch("");
-                    setStatus("all");
-                  }}
-                >
-                  Clear filters
-                </button>
-              ) : undefined
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setSearch("");
+                  setStatus("all");
+                }}
+              >
+                Clear filters
+              </button>
             }
           />
         )}
