@@ -505,6 +505,7 @@ small,
   font-size: 11px;
   padding: 18px 36px;
 }
+.sidebar-close,
 .mobile-menu,
 .menu-backdrop {
   display: none;
@@ -2168,6 +2169,13 @@ progress::-moz-progress-bar {
     transform: translateX(-100%);
     transition: transform 0.2s;
     width: 250px;
+  }
+  .sidebar-close {
+    display: inline-flex;
+    position: absolute;
+    top: 20px;
+    right: 10px;
+    color: #dce7f2;
   }
   .sidebar.is-open {
     visibility: visible;
