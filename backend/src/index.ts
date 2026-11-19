@@ -8,6 +8,7 @@ import { documentRoutes } from "./routes/document.routes";
 import { healthRoutes } from "./routes/health.routes";
 import { claimRoutes } from "./routes/claim.routes";
 import { reportRoutes } from "./routes/report.routes";
+import { citationRoutes } from "./routes/citation.routes";
 import { bodyLimit } from "hono/body-limit";
 import type { AppEnv } from "./types";
 
@@ -76,6 +77,7 @@ app.route("/api/health", healthRoutes);
 app.route("/api/documents", documentRoutes);
 app.route("/api/documents", reportRoutes);
 app.route("/api/claims", claimRoutes);
+app.route("/api/citations", citationRoutes);
 app.notFound((c) =>
   c.json(
     {
