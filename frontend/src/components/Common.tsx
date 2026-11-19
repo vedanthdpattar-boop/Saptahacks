@@ -9,7 +9,12 @@ import {
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import type { ReactNode } from "react";
-import type { Claim, Verdict, VerificationReport } from "../types";
+import type {
+  Claim,
+  ResearchDocument,
+  Verdict,
+  VerificationReport,
+} from "../types";
 import { verdicts } from "../types";
 import { DEMO_MODE } from "../services/api";
 export const statusClass = (verdict: Verdict) =>
@@ -152,6 +157,32 @@ export function EmptyState({
       <p>{description}</p>
       {action}
     </div>
+  );
+}
+export function NoClaimsState({ document }: { document: ResearchDocument }) {
+  const complete = document.status === "complete";
+  return (
+    <>
+      <PageHeader
+        title={
+          complete ? "No scientific claims found" : "No claims available yet"
+        }
+        description={document.name}
+      />
+      <EmptyState
+        title="Nothing has been verified"
+        description={
+          complete
+            ? "No scientific claims were extracted from this PDF. This does not confirm that its contents are correct. CiteVerify checks research claims against scholarly publications; it cannot verify résumé credentials. Try an academic paper with claims and references."
+            : "This document has no extracted claims to display yet. Its contents have not been verified."
+        }
+        action={
+          <Link className="btn btn-primary" to="/upload">
+            Upload a research paper <ArrowRight size={16} />
+          </Link>
+        }
+      />
+    </>
   );
 }
 export function ReportTabs() {
