@@ -2,7 +2,7 @@
 
 All success responses are direct JSON, without a `data` envelope. Examples with claims, publications, DOIs or passages below are **synthetic examples only**, not real research or verified findings. Replace all document/claim/job IDs and tokens with values returned by your own requests.
 
-Base origin: `http://localhost:8787` locally; use the actual Cloudflare Worker URL after deployment.
+Base origin: `http://localhost:8787` locally; `https://citeverify-api.citeverify-backend.workers.dev` for the deployed API.
 
 | Method | Path                             | Authentication        | Result                                       |
 | ------ | -------------------------------- | --------------------- | -------------------------------------------- |
@@ -33,7 +33,7 @@ curl http://localhost:8787/api/health
 }
 ```
 
-This probes D1 and service configuration, not live AI availability, R2 billing or research API quotas.
+This probes D1 and service configuration, not live AI availability, private storage availability or research API quotas.
 
 ## Upload
 
@@ -62,7 +62,7 @@ HTTP 201 example (the token below is a placeholder):
 }
 ```
 
-The initial limit is 10 MiB, 200000 UTF-8 extracted-text bytes, and 1–100 pages. The PDF MIME type and initial `%PDF-1.x`/`%PDF-2.0` signature are checked; this is not full server-side PDF parsing. Empty/unreadable text is rejected. PDFs and text are private R2 objects. Successful database insertion stores only a SHA-256 token hash. Object cleanup runs on storage/database failure.
+The initial limit is 10 MiB, 200000 UTF-8 extracted-text bytes, and 1–100 pages. The PDF MIME type and initial `%PDF-1.x`/`%PDF-2.0` signature are checked; this is not full server-side PDF parsing. Empty/unreadable text is rejected. PDFs and text are private KV values (or R2 objects when that binding is configured). Successful database insertion stores only a SHA-256 token hash. Object cleanup runs on storage/database failure. KV text that is not readable yet returns a retryable 503 during extraction; retry in a minute without uploading again.
 
 Set task-specific shell values using your returned IDs/token:
 

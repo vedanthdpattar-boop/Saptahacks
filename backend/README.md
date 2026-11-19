@@ -1,29 +1,21 @@
 # CiteVerify backend
 
-The Hono Worker stores uploaded PDFs and extracted text privately in R2, keeps document-scoped claims and verification records in D1, resolves citations with Crossref and OpenAlex, retrieves identifiable open-access full text, and compares exact quotations with Workers AI or Gemini. The existing React frontend connects through its API service; its pages, components, styles and assets are unchanged.
+The Hono Worker stores uploaded PDFs and extracted text privately in Cloudflare KV (or an optional R2 binding), keeps document-scoped claims and verification records in D1, resolves citations with Crossref and OpenAlex, retrieves identifiable open-access full text, and compares exact quotations with Workers AI or Gemini. The existing React frontend connects through its API service; its pages, components, styles and assets are unchanged.
 
 ## Current readiness
 
 The results below apply to the assembled application. Merge the three component branches as described in [TEAM_BRANCHES.md](../TEAM_BRANCHES.md) before running the backend.
 
-Local D1 migrations, R2 upload/authentication tests, the complete synthetic API workflow, frontend API tests, TypeScript checks and dry-run bundling passed. Cloudflare login, production resources, production secrets and real AI inference require the team's account. CiteVerify has not been deployed to Vercel, so the checked-in CORS configuration contains exact localhost origins. Add the actual deployment origin once it exists.
+The website is deployed at https://error404-beryl-eight.vercel.app, and Vercel production tracks `feature/integration`. Its exact origin is configured for authenticated CORS. D1 has been created and migrated, and the confirmed Crossref contact is configured.
 
-No production database ID is checked in. `preview_database_id: "citeverify-local"` is a local Wrangler resource name, not a claimed Cloudflare database ID. The deployment script refuses to publish until a real D1 UUID and a team contact email are configured.
+The deployment uses private Workers KV because R2 activation requires a payment method. PDFs retain the 10 MiB limit, extracted text retains the 200000-byte limit, and access-token checks are unchanged. The API was uploaded to https://citeverify-api.citeverify-backend.workers.dev. Public HTTPS and health checks passed with exact-origin CORS; an unconfigured origin returned 403. A published Europe PMC research excerpt completed upload, real Workers AI extraction, citation/publication lookup, evidence comparison and report generation through the deployed website. One claim was marked supported with traceable evidence. An unauthenticated document request returned 401. This is a workflow smoke test, not a scientific accuracy benchmark.
 
-Validation completed on 2026-11-19:
-
-- Backend: 41 tests passed in the Workers runtime, TypeScript passed, and Wrangler dry-run bundling passed.
-- Frontend: 11 API tests passed, the production build passed, and all six Playwright browser checks passed in one final run.
-- Real local HTTP: upload returned 201, authorized document access 200, unauthorized access 401, and unconfigured AI returned an explicit 503 `ai_unavailable`; responses used `Cache-Control: no-store`.
-- Public research retrieval: Crossref and OpenAlex returned HTTP 200 for DOI `10.1093/nar/gku1061`. Europe PMC's API timed out at the configured eight-second limit. The PMC HTML fallback returned HTTP 200, and the actual Workers HTML parser extracted 48 body paragraphs with section locations from that article.
-- Deployment guard: missing database configuration and wildcard origins were rejected; an explicitly synthetic valid JSONC configuration passed. No synthetic database ID was written to the production configuration.
-
-The full verification workflow and verdict tests use synthetic research and mocked AI. The public research checks validate retrieval and parsing only. No real document has been given a live AI verdict, and neither Cloudflare nor Vercel deployment has been verified.
+Validation on 2026-11-20: TypeScript and all 51 Workers-runtime backend tests passed. These include a 10 MiB binary PDF round trip through KV, failure cleanup, a retryable delayed KV read, the complete synthetic API workflow with both KV and R2, and regression checks for wrapped PDF quotations, reference markers and bibliography exclusion. The frontend passed 11 API tests and its production build; all six browser checks passed during deployment preparation. Synthetic AI tests do not establish real scientific accuracy.
 
 ## Architecture
 
 - `src/index.ts`, `routes/`: Hono endpoints, CORS and request limits.
-- `services/document.service.ts`: PDF validation, private R2 storage, access-token issuance and failure cleanup.
+- `services/document.service.ts`: PDF validation, private KV/R2 storage, access-token issuance and failure cleanup.
 - `services/claim.service.ts`, `citation.service.ts`: bounded exact-text extraction, deterministic citation parsing, AI assistance and document jobs.
 - `services/research.service.ts`: DOI/bibliographic lookups, title/author/year matching, alternative matches and D1 metadata caching.
 - `services/evidence.service.ts`: source-identity checks, Europe PMC JATS, supported repository HTML/XML/text, paragraph selection and retrieval provenance.
@@ -41,15 +33,14 @@ From the repository:
 
 ```sh
 git fetch origin
-git switch -c feature/integration origin/feature/frontend
-git merge origin/feature/backend origin/feature/database origin/feature/ai
+git switch --track origin/feature/integration
 cd backend
 npm ci
 npm run migrate:local
 npm run dev
 ```
 
-The Worker listens at `http://localhost:8787`. Local D1 and R2 data stays in the ignored `.wrangler/` directory. Health checks use D1 and do not prove that remote AI or research providers are ready:
+The Worker listens at `http://localhost:8787`. Local D1 and KV/R2 data stays in the ignored `.wrangler/` directory. Health checks use D1 and do not prove that remote AI or research providers are ready:
 
 ```sh
 curl http://localhost:8787/api/health
@@ -63,8 +54,8 @@ Non-secret defaults live in `wrangler.jsonc`:
 | ------------------------ | ------------------------------------------------------------------------------------ |
 | `AI_PROVIDER`            | `workers-ai`; alternatively `gemini`                                                 |
 | `AI_MODEL`               | `@cf/meta/llama-3.3-70b-instruct-fp8-fast` for Workers AI                            |
-| `FRONTEND_ORIGIN`        | Exact localhost/127.0.0.1 origins on ports 5173 and 4173; comma-separated            |
-| `CROSSREF_CONTACT_EMAIL` | Empty locally; set the actual team contact for Crossref's polite pool and deployment |
+| `FRONTEND_ORIGIN`        | Production Vercel origin plus exact localhost/127.0.0.1 origins; comma-separated            |
+| `CROSSREF_CONTACT_EMAIL` | Confirmed team contact; use your own contact when deploying a separate instance |
 | `MAX_PDF_BYTES`          | `10485760` (10 MiB); validated up to 25 MiB                                          |
 | `MAX_TEXT_BYTES`         | `200000` UTF-8 bytes; validated up to 500000                                         |
 
@@ -90,7 +81,7 @@ For deployed Gemini, update `AI_PROVIDER` and `AI_MODEL` in `wrangler.jsonc`, th
 npx wrangler secret put GEMINI_API_KEY
 ```
 
-Workers AI is the primary provider. The selected Llama model currently supports JSON Mode. Local Workers AI inference uses Cloudflare's service and requires authentication; it is not an offline model. After logging in, set `remote: true` in the `ai` binding for remote AI development and restart Wrangler. With no credentials, the local server still supports D1/R2/health/upload and returns an explicit AI processing error. Gemini can be used for local inference instead when its secret is configured. Both providers have a 20-second per-generation timeout; invalid JSON or untraceable quotations receive one controlled retry and then an actionable processing error. There is no automatic switch to demo results or another provider.
+Workers AI is the primary provider. The selected Llama model currently supports JSON Mode. Local Workers AI inference uses Cloudflare's service and requires authentication; it is not an offline model. After logging in, set `remote: true` in the `ai` binding for remote AI development and restart Wrangler. With no credentials, the local server still supports D1/KV/health/upload and returns an explicit AI processing error. Gemini can be used for local inference instead when its secret is configured. Both providers have a 20-second per-generation timeout; invalid JSON or untraceable quotations receive one controlled retry and then an actionable processing error. There is no automatic switch to demo results or another provider.
 
 OpenAlex works without a key for basic access; configure the optional key for the account's larger budget:
 
@@ -108,17 +99,21 @@ These commands have to run in your authenticated account:
 npx wrangler login
 npx wrangler whoami
 npx wrangler d1 create citeverify-db
-npx wrangler r2 bucket create citeverify-files
+npx wrangler kv namespace create citeverify-files
 ```
 
-Copy the actual UUID printed by D1 creation into the first `d1_databases` entry in `wrangler.jsonc` as `database_id`. Keep `binding: "DB"`, `database_name: "citeverify-db"`, the local preview name, and the migrations directory. Do not substitute an invented UUID. If the database or bucket already exists, use it rather than creating a duplicate:
+Copy the actual UUID printed by D1 creation into the first `d1_databases` entry in `wrangler.jsonc` as `database_id`. Keep `binding: "DB"`, `database_name: "citeverify-db"`, the local preview name, and the migrations directory. Do not substitute an invented UUID. If the database or namespace already exists, use it rather than creating a duplicate:
 
 ```sh
 npx wrangler d1 list
-npx wrangler r2 bucket list
+npx wrangler kv namespace list
 ```
 
-Bindings are `DB`, `FILES` and `AI`. R2 must remain private: do not enable an R2 public development URL or public custom domain for uploaded documents. Native rate-limit bindings are also configured. Their namespace IDs are account-scoped user choices; choose different numeric IDs if the account already uses `1001` or `1002` for another application.
+Bindings are `DB`, `FILES_KV` and `AI`. Copy the actual KV namespace ID into `kv_namespaces` as `binding: "FILES_KV"`. No public KV gateway is exposed. Keep uploads private and document-token protected.
+
+KV's free allowance includes 1 GB stored, 100000 reads/day and 1000 writes/day; each successful upload uses two writes. New keys can take time to become readable in another region. A missing KV text read returns 503 and releases the processing lease so the user can retry in a minute. Quota failures return an error and do not substitute findings. Monitor storage use and delete obsolete documents through an authorized maintenance process before reaching the allowance.
+
+Optional R2: create a private `citeverify-files` bucket, remove the KV binding and add `r2_buckets: [{ "binding": "FILES", "bucket_name": "citeverify-files" }]`. Do not switch an existing deployment's storage without migrating its documents; previously uploaded files remain in their original storage. Never enable a public R2 URL for research documents. Native rate-limit bindings are also configured. Their namespace IDs are account-scoped user choices; choose different numeric IDs if the account already uses `1001` or `1002` for another application.
 
 Set the actual `CROSSREF_CONTACT_EMAIL`. Once Vercel is deployed, append its exact origin (for example your real `https://…vercel.app` origin) to `FRONTEND_ORIGIN`, without path or trailing slash. Keep localhost entries while teammates use local frontends. Wildcard authenticated CORS is rejected.
 
@@ -138,7 +133,7 @@ npm run deploy
 npx wrangler deploy
 ```
 
-Use the Worker URL actually returned by Wrangler. Deployment does not deploy the Vercel frontend. Remote account access, R2/AI availability and plan limits must be checked in your account; a dry run does not create resources or prove a live deployment.
+Use the Worker URL actually returned by Wrangler. Deployment does not deploy the Vercel frontend. Remote account access, KV/AI availability and plan limits must be checked in your account; a dry run does not create resources or prove a live deployment.
 
 ## Connect the existing frontend
 
@@ -161,11 +156,11 @@ For the existing labelled demonstration, explicitly use `VITE_DEMO_MODE=true`. L
 
 Token storage is per browser session. A report link by itself does not grant access from another session; upload again there or arrange token transfer privately using an API client. There is no account management or token recovery endpoint. Never put a token in a URL or source control.
 
-The preserved PDF.js frontend accepts PDFs up to 25 MiB for extraction/demo; live upload applies the backend's initial 10 MiB limit and displays the returned size error. Scanned/image-only PDFs require OCR before this workflow; the backend does not parse arbitrary PDFs server-side.
+The PDF.js frontend accepts PDFs up to 10 MiB, matching the API limit. Scanned/image-only PDFs require OCR before this workflow; the backend does not parse arbitrary PDFs server-side.
 
 ## Jobs, limits and evidence rules
 
-An extraction POST processes one overlapping text chunk, at most 8000 characters. Prompts preserve exact contiguous original wording. Claim/reference strings that do not occur in the input are rejected before persistence. There are at most 40 chunks, 100 claims, 150 references and 100 pages per document. Exceeding processing limits causes a visible error and does not silently declare a partial extraction complete.
+An extraction POST processes one overlapping text chunk, at most 8000 characters. Prompts preserve exact contiguous original wording. When AI normalizes PDF whitespace, extraction restores the actual contiguous source substring; changed words, numbers and punctuation remain invalid. Printed reference markers are recovered only from the matching deterministic reference block. Bibliography-only claims are removed. Claim/reference strings that cannot be grounded in the input are rejected before persistence. There are at most 40 chunks, 100 claims, 150 references and 100 pages per document. Exceeding processing limits causes a visible error and does not silently declare a partial extraction complete.
 
 `analysis_jobs` tracks the entire analysis. Extraction ending sets `extractionComplete: true`, stage `awaiting_verification`, status `waiting` and progress 45; it does not mark the entire job complete. Every claim verification saves a result and advances progress. The final traceable report is assembled before the job reaches 100. GET job status is read-only. Browser cancellation stops requests; saved progress remains. Document leases serialize mutations and expire after two minutes so interrupted processing can resume.
 
@@ -179,7 +174,7 @@ Passages are selected with surrounding paragraph context, within an 18000-charac
 
 Confidence represents uncalibrated evidence strength. Reports have counts, claim-citation mapping and citation-publication matching rates, with their denominators; they do not expose a universal integrity score. The rich `verification` object uses snake-case verdicts and confidence 0–1. Legacy display fields retain the frontend's labels and 0–100 confidence.
 
-Native Workers rate limits are approximate per Cloudflare location: API requests 120/minute per connecting IP, research requests 20/10 seconds per provider category. There are no per-process counters. External 429/timeouts are retained as limitations or processing errors as appropriate. R2/D1 upload failure triggers object cleanup; if cleanup itself fails, the server logs a safe cleanup failure code for operational follow-up.
+Native Workers rate limits are approximate per Cloudflare location: API requests 120/minute per connecting IP, research requests 20/10 seconds per provider category. There are no per-process counters. External 429/timeouts are retained as limitations or processing errors as appropriate. KV/R2/D1 upload failure triggers object cleanup; if cleanup itself fails, the server logs a safe cleanup failure code for operational follow-up.
 
 ## API and testing
 
@@ -197,7 +192,7 @@ npm run build
 npm run test:e2e
 ```
 
-Backend tests execute in Cloudflare's Workers runtime with real local D1/R2 and mocked external APIs/AI. Every fixture is explicitly synthetic. Coverage includes upload/auth/cleanup, schema relationships, malformed/exact AI output, citation parsing, DOI and ambiguous matching, source identity, full-text and abstract handling, numerical exaggeration, contradictions, report traceability and idempotency. The required synthetic 30% scenario is tested directly and through the complete endpoint workflow. Frontend tests cover session tokens, multipart fields, job continuation, cancellation, conflicts and no live-to-demo fallback.
+Backend tests execute in Cloudflare's Workers runtime with real local D1/KV/R2 and mocked external APIs/AI. Every fixture is explicitly synthetic. Coverage includes upload/auth/cleanup, schema relationships, malformed/exact AI output, citation parsing, DOI and ambiguous matching, source identity, full-text and abstract handling, numerical exaggeration, contradictions, report traceability and idempotency. The required synthetic 30% scenario is tested directly and through the complete endpoint workflow. Frontend tests cover session tokens, multipart fields, job continuation, cancellation, conflicts and no live-to-demo fallback.
 
 ## Team Git workflow
 
