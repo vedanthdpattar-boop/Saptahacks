@@ -38,6 +38,15 @@ assert(
   ["workers-ai", "gemini"].includes(config.vars?.AI_PROVIDER),
   "Set AI_PROVIDER to workers-ai or gemini.",
 );
+assert(
+  config.r2_buckets?.some((bucket) => bucket.binding === "FILES") ||
+    config.kv_namespaces?.some(
+      (namespace) =>
+        namespace.binding === "FILES_KV" &&
+        /^[0-9a-f]{32}$/i.test(namespace.id),
+    ),
+  "Configure private document storage using the FILES R2 bucket or a real FILES_KV namespace ID.",
+);
 console.log(
   "Deployment configuration passed. Localhost origins remain valid until the actual Vercel origin is added.",
 );
