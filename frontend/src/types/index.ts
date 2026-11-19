@@ -43,6 +43,31 @@ export interface VerificationReport {
   claims: Claim[];
   generatedAt: string;
   limitations: string[];
+  citations?: Citation[];
+  citationDiagnostics?: string[];
+}
+export interface Citation {
+  id: string;
+  documentId: string;
+  key: string;
+  referenceText: string;
+  doi: string | null;
+  title: string | null;
+  authors: string[];
+  year: number | null;
+  status: "unchecked" | "matched" | "needs_review";
+  checkedAt: string | null;
+  publication: Publication | null;
+  alternatives: (Publication & { score: number; selected: boolean })[];
+  notes: string[];
+}
+export type CitationStyle = "apa" | "ieee";
+export interface FormattedCitation {
+  doi: string;
+  style: CitationStyle;
+  text: string;
+  publication: Publication;
+  notes: string[];
 }
 export interface PdfExtraction {
   text: string;
