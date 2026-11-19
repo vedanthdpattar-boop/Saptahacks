@@ -124,14 +124,17 @@ export async function processExtraction(env: Bindings, document: DocumentRow) {
   if (existing?.extraction_complete) return jobDTO(existing);
   const token = await repo.acquireLease(document.id);
   try {
-    const object = await env.FILES.get(document.text_key);
-    if (!object)
+    const text = env.FILES
+      ? await (await env.FILES.get(document.text_key))?.text()
+      : await env.FILES_KV?.get(document.text_key);
+    if (!text)
       throw new ApiError(
-        500,
+        !env.FILES && env.FILES_KV ? 503 : 500,
         "document_text_missing",
-        "The stored document text is unavailable. Upload the document again.",
+        !env.FILES && env.FILES_KV
+          ? "The uploaded text is not readable yet. Retry processing in a minute while private storage replicates."
+          : "The stored document text is unavailable. Upload the document again.",
       );
-    const text = await object.text();
     const chunks = splitDocumentText(text, document.page_count);
     const job = await repo.ensureJob(document.id, chunks.length);
     const parsed = parseReferences(document.id, text);

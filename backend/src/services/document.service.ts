@@ -71,6 +71,12 @@ export async function uploadDocument(env: Bindings, form: FormData) {
       "text_too_large",
       `Extracted text exceeds the ${limits.text}-byte processing limit. Upload a shorter document.`,
     );
+  if (!env.FILES && !env.FILES_KV)
+    throw new ApiError(
+      503,
+      "storage_missing",
+      "Private document storage is not configured.",
+    );
   const id = crypto.randomUUID();
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   const accessToken = btoa(String.fromCharCode(...bytes))
@@ -94,17 +100,26 @@ export async function uploadDocument(env: Bindings, form: FormData) {
     access_token_hash: await hashToken(accessToken),
   };
   try {
-    await env.FILES.put(row.pdf_key, file.stream(), {
-      httpMetadata: { contentType: "application/pdf" },
-    });
-    await env.FILES.put(row.text_key, extractedText, {
-      httpMetadata: { contentType: "text/plain; charset=utf-8" },
-    });
+    if (env.FILES) {
+      await env.FILES.put(row.pdf_key, file.stream(), {
+        httpMetadata: { contentType: "application/pdf" },
+      });
+      await env.FILES.put(row.text_key, extractedText, {
+        httpMetadata: { contentType: "text/plain; charset=utf-8" },
+      });
+    } else {
+      await env.FILES_KV!.put(row.pdf_key, await file.arrayBuffer());
+      await env.FILES_KV!.put(row.text_key, extractedText);
+    }
     const document = await new Repository(env.DB).insertDocument(row);
     return { ...documentDTO(document), accessToken };
   } catch (error) {
     try {
-      await env.FILES.delete([row.pdf_key, row.text_key]);
+      if (env.FILES) await env.FILES.delete([row.pdf_key, row.text_key]);
+      else
+        await Promise.all(
+          [row.pdf_key, row.text_key].map((key) => env.FILES_KV!.delete(key)),
+        );
     } catch {
       console.error(
         JSON.stringify({ code: "upload_cleanup_failed", documentId: id }),
