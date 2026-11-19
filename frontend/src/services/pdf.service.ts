@@ -1,6 +1,6 @@
 import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import type { PdfExtraction } from "../types";
-export const MAX_PDF_BYTES = 25 * 1024 * 1024;
+export const MAX_PDF_BYTES = 10 * 1024 * 1024;
 export function validatePdf(file: Pick<File, "name" | "size" | "type">) {
   if (
     !/\.pdf$/i.test(file.name) ||
@@ -12,7 +12,7 @@ export function validatePdf(file: Pick<File, "name" | "size" | "type">) {
     throw new Error("This file is empty. Choose a text-based PDF.");
   if (file.size > MAX_PDF_BYTES)
     throw new Error(
-      "This PDF exceeds the 25 MB limit. Choose a smaller document.",
+      "This PDF exceeds the 10 MB limit. Choose a smaller document.",
     );
 }
 export async function extractPdf(
