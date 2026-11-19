@@ -7,6 +7,7 @@
     {
       "binding": "DB",
       "database_name": "citeverify-db",
+      "database_id": "d63c21e3-4a28-42d5-a0ca-46fead93b084",
       "preview_database_id": "citeverify-local",
       "migrations_dir": "migrations",
     },
@@ -28,8 +29,8 @@
   "vars": {
     "AI_PROVIDER": "workers-ai",
     "AI_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-    "FRONTEND_ORIGIN": "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173",
-    "CROSSREF_CONTACT_EMAIL": "",
+    "FRONTEND_ORIGIN": "https://error404-beryl-eight.vercel.app,http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173",
+    "CROSSREF_CONTACT_EMAIL": "vedanth.d.pattar@gmail.com",
     "MAX_PDF_BYTES": "10485760",
     "MAX_TEXT_BYTES": "200000",
   },
