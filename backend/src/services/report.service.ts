@@ -1,6 +1,7 @@
 import { Repository } from "../database/repository";
 import type {
   ClaimRow,
+  CitationRow,
   DocumentRow,
   EvidenceRow,
   ReportData,
@@ -8,6 +9,7 @@ import type {
   Verdict,
 } from "../types";
 import { documentDTO } from "./document.service";
+import { titleSimilarity } from "./research.service";
 export const verdictLabels: Record<Verdict, string> = {
   supported: "Supported",
   partially_supported: "Partially Supported",
@@ -25,6 +27,65 @@ function publicationDTO(source: SourceRow, evidenceUrl?: string) {
     ...((evidenceUrl ?? source.landing_page_url)
       ? { url: evidenceUrl ?? source.landing_page_url! }
       : {}),
+  };
+}
+export function citationDTO(citation: CitationRow, data: ReportData) {
+  const matches = data.matches
+    .filter((m) => m.citation_id === citation.id)
+    .flatMap((m) => {
+      const source = data.sources.find((s) => s.id === m.source_id);
+      return source
+        ? [
+            {
+              score: m.match_score,
+              selected: m.is_selected === 1,
+              ...publicationDTO(source),
+            },
+          ]
+        : [];
+    });
+  const publication = matches.find((m) => m.selected) ?? null;
+  const differences: string[] = [];
+  if (
+    publication &&
+    citation.title &&
+    titleSimilarity(citation.title, publication.title) < 0.95
+  )
+    differences.push(
+      "The printed title differs from the matched publication title; compare both versions.",
+    );
+  if (
+    publication?.year &&
+    citation.publication_year &&
+    publication.year !== citation.publication_year
+  )
+    differences.push(
+      `Printed year ${citation.publication_year} differs from registered year ${publication.year}. Online-first and issue dates can differ; check the publisher record.`,
+    );
+  return {
+    id: citation.id,
+    documentId: citation.document_id,
+    key: citation.citation_key,
+    referenceText: citation.reference_text,
+    doi: citation.doi,
+    title: citation.title,
+    authors: JSON.parse(citation.authors_json) as string[],
+    year: citation.publication_year,
+    status: !citation.resolved_at
+      ? "unchecked"
+      : publication && !differences.length
+        ? "matched"
+        : "needs_review",
+    checkedAt: citation.resolved_at,
+    publication,
+    alternatives: matches
+      .filter((m) => !m.selected)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10),
+    notes: [
+      ...(JSON.parse(citation.resolution_notes_json) as string[]),
+      ...differences,
+    ],
   };
 }
 function evidenceDTO(e: EvidenceRow, data: ReportData) {
@@ -166,6 +227,7 @@ export function buildReport(document: DocumentRow, data: ReportData) {
   return {
     document: documentDTO(document),
     claims: data.claims.map((c) => claimDTO(c, data)),
+    citations: data.citations.map((c) => citationDTO(c, data)),
     generatedAt: new Date().toISOString(),
     status: data.jobs[0]?.status === "complete" ? "complete" : "processing",
     limitations: [
