@@ -7,6 +7,7 @@ import { createDemoReport, demoDocument } from "../mocks/demoData";
 import { ResultsPage } from "./ResultsPage";
 import { ReportPage } from "./ReportPage";
 import { CitationsPage } from "./CitationsPage";
+import { LoadingState, SourceLoader } from "../components/Common";
 import { CitationGeneratorPage } from "./CitationGeneratorPage";
 import { EvidenceGraphPage } from "./EvidenceGraphPage";
 
@@ -100,4 +101,18 @@ it("labels the animation as illustration and provides accessible citation inputs
   expect(html).toContain('for="citation-doi"');
   expect(html).toContain('for="citation-style"');
   expect(html).toContain("does not verify a research claim");
+});
+
+it("ties the branded loading screen to an accessible busy state without invented progress", () => {
+  const html = renderToStaticMarkup(
+    createElement(LoadingState, { label: "Loading source details" }),
+  );
+  expect(html).toContain('role="status"');
+  expect(html).toContain('aria-busy="true"');
+  expect(html).toContain("Loading source details");
+  expect(html).not.toContain('role="progressbar"');
+  expect(html).not.toMatch(/verified|Supported/);
+  expect(
+    renderToStaticMarkup(createElement(SourceLoader, { paused: true })),
+  ).toContain("is-paused");
 });

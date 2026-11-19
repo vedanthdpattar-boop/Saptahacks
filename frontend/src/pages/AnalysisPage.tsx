@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Check, Circle, LoaderCircle, X } from "lucide-react";
-import { EmptyState, ErrorState, PageHeader } from "../components/Common";
+import {
+  EmptyState,
+  ErrorState,
+  PageHeader,
+  SourceLoader,
+} from "../components/Common";
 import { useWorkspace } from "../components/Workspace";
 import { api, DEMO_MODE } from "../services/api";
 const stages = [
@@ -55,7 +60,7 @@ export function AnalysisPage() {
         setDetail(
           DEMO_MODE
             ? "Loading the fixed illustrative claims"
-            : "Waiting for backend claim extraction",
+            : "Reading scientific claims and references",
         );
         const claims = await api.extract(document.id, abort.signal);
         if (abort.signal.aborted) return;
@@ -63,14 +68,14 @@ export function AnalysisPage() {
         setDetail(
           DEMO_MODE
             ? "Showing fictional sample citations"
-            : `${claims.length} claims returned by the backend`,
+            : `${claims.length} scientific claims extracted`,
         );
         if (DEMO_MODE) await demoPause(abort.signal);
         setStage(3);
         setDetail(
           DEMO_MODE
             ? "Simulated publication lookup; no real sources retrieved"
-            : "The verify endpoint searches publications and compares evidence",
+            : "Finding the publications behind the references",
         );
         if (DEMO_MODE) await demoPause(abort.signal);
         setStage(4);
@@ -119,9 +124,10 @@ export function AnalysisPage() {
         description={draft?.file.name ?? "Continuing document analysis"}
       />
       <section className="panel analysis-panel">
-        <div className="analysis-orbit">
-          <LoaderCircle size={40} className={error ? "" : "spin"} />
-        </div>
+        <span className="eyebrow">
+          Stage {stage + 1} of {stages.length}
+        </span>
+        <SourceLoader paused={!!error} />
         <h2>{error ? "Analysis paused" : stages[stage]}</h2>
         <p role="status" aria-live="polite">
           {error ? "Resolve the error below and retry." : detail}
@@ -166,6 +172,13 @@ export function AnalysisPage() {
             </li>
           ))}
         </ol>
+        <details className="analysis-reading-tip">
+          <summary>Keep the evidence in perspective</summary>
+          <p>
+            A citation match identifies a publication. A verdict compares a
+            claim with retrieved evidence. Both still need your review.
+          </p>
+        </details>
         {error && (
           <ErrorState message={error} retry={() => setAttempt((n) => n + 1)} />
         )}
