@@ -10,6 +10,7 @@ import {
   GitBranch,
   FileText,
   X,
+  Quote,
 } from "lucide-react";
 import { DemoNotice, Logo } from "./Common";
 import { DEMO_MODE } from "../services/api";
@@ -20,7 +21,7 @@ export function Layout() {
   const documentId =
     match?.params.id ?? (DEMO_MODE ? "demo-document" : undefined);
   useEffect(() => {
-    if (open) document.getElementById("main")?.focus();
+    document.getElementById("main")?.focus({ preventScroll: true });
     setOpen(false);
     window.scrollTo(0, 0);
   }, [location.pathname]);
@@ -41,12 +42,18 @@ export function Layout() {
   const nav = [
     ["/dashboard", "Dashboard", LayoutDashboard],
     ["/upload", "Upload document", Upload],
+    ["/citations", "Citation generator", Quote],
     ...(documentId
       ? [
           [
             `/documents/${documentId}/results`,
             "Verification results",
             FileSearch,
+          ] as const,
+          [
+            `/documents/${documentId}/citations`,
+            "Citation check",
+            BookOpen,
           ] as const,
           [
             `/documents/${documentId}/graph`,
@@ -123,7 +130,9 @@ export function Layout() {
         </header>
         <main id="main" className="workspace-main" tabIndex={-1}>
           <DemoNotice />
-          <Outlet />
+          <div className="workspace-view" key={location.pathname}>
+            <Outlet />
+          </div>
         </main>
         <footer className="app-footer">
           CiteVerify AI <span>Scientific claims deserve a closer look.</span>

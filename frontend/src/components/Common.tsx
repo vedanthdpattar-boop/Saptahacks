@@ -7,7 +7,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
 import type {
   Claim,
@@ -55,7 +55,7 @@ export function DemoNotice({
   ) : (
     <div className="live-notice">
       <span className="live-dot" />
-      Live mode · Results come from your configured backend.
+      Live verification · Review the linked sources before relying on a result.
     </div>
   );
 }
@@ -159,7 +159,13 @@ export function EmptyState({
     </div>
   );
 }
-export function NoClaimsState({ document }: { document: ResearchDocument }) {
+export function NoClaimsState({
+  document,
+  citationCount = 0,
+}: {
+  document: ResearchDocument;
+  citationCount?: number;
+}) {
   const complete = document.status === "complete";
   return (
     <>
@@ -172,13 +178,21 @@ export function NoClaimsState({ document }: { document: ResearchDocument }) {
       <EmptyState
         title="Nothing has been verified"
         description={
-          complete
-            ? "No scientific claims were extracted from this PDF. This does not confirm that its contents are correct. CiteVerify checks research claims against scholarly publications; it cannot verify résumé credentials. Try an academic paper with claims and references."
-            : "This document has no extracted claims to display yet. Its contents have not been verified."
+          citationCount
+            ? `No scientific claims were extracted to compare with evidence. ${citationCount} bibliography ${citationCount === 1 ? "reference is" : "references are"} available to check separately. A publication match does not prove that the document’s contents are correct.`
+            : complete
+              ? "No scientific claims were extracted from this PDF. This does not confirm that its contents are correct. CiteVerify checks research claims against scholarly publications; it cannot verify résumé credentials. Try an academic paper with claims and references."
+              : "This document has no extracted claims to display yet. Its contents have not been verified."
         }
         action={
-          <Link className="btn btn-primary" to="/upload">
-            Upload a research paper <ArrowRight size={16} />
+          <Link
+            className="btn btn-primary"
+            to={
+              citationCount ? `/documents/${document.id}/citations` : "/upload"
+            }
+          >
+            {citationCount ? "Check references" : "Upload a research paper"}{" "}
+            <ArrowRight size={16} />
           </Link>
         }
       />
@@ -186,11 +200,13 @@ export function NoClaimsState({ document }: { document: ResearchDocument }) {
   );
 }
 export function ReportTabs() {
+  const location = useLocation();
   const { id } = useParams();
   return (
     <nav className="report-tabs" aria-label="Analysis views">
       {[
         ["results", "Claims overview"],
+        ["citations", "Citation check"],
         ["graph", "Evidence graph"],
         ["report", "Verification report"],
       ].map(([path, title]) => (
