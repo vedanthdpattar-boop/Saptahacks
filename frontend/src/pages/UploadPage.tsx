@@ -76,7 +76,7 @@ export function UploadPage() {
           <div className="panel-heading">
             <div>
               <h2>Research document</h2>
-              <p>One PDF · up to 25 MB</p>
+              <p>One PDF · up to 10 MB</p>
             </div>
             <FileText size={20} />
           </div>

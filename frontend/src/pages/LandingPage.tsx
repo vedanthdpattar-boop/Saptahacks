@@ -48,7 +48,7 @@ const capabilities = [
 ];
 
 const workflow = [
-  ["Add a research PDF", "Choose one text-based PDF, up to 25 MB."],
+  ["Add a research PDF", "Choose one text-based PDF, up to 10 MB."],
   ["Extract claims and citations", "Review the statements the paper makes."],
   ["Compare evidence", "Inspect source passages, verdicts, and limitations."],
   ["Export a reviewable report", "Keep the reasoning visible for your team."],
