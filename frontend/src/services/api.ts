@@ -5,6 +5,10 @@ import {
   type ResearchDocument,
   type UploadDraft,
   type VerificationReport,
+  type Citation,
+  type CitationStyle,
+  type FormattedCitation,
+  type Publication,
 } from "../types";
 
 export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
@@ -27,6 +31,60 @@ const object = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null;
 const strings = (v: unknown): v is string[] =>
   Array.isArray(v) && v.every((x) => typeof x === "string");
+const validPublication = (v: unknown): v is Publication =>
+  object(v) &&
+  typeof v.title === "string" &&
+  strings(v.authors) &&
+  (v.year === undefined ||
+    (typeof v.year === "number" && Number.isInteger(v.year))) &&
+  (v.doi === undefined || typeof v.doi === "string") &&
+  (v.url === undefined || typeof v.url === "string");
+export function validCitation(v: unknown): v is Citation {
+  return (
+    object(v) &&
+    ["id", "documentId", "key", "referenceText"].every(
+      (key) => typeof v[key] === "string" && v[key] !== "",
+    ) &&
+    (v.doi === null || typeof v.doi === "string") &&
+    (v.title === null || typeof v.title === "string") &&
+    strings(v.authors) &&
+    (v.year === null ||
+      (typeof v.year === "number" && Number.isInteger(v.year))) &&
+    ["unchecked", "matched", "needs_review"].includes(String(v.status)) &&
+    (v.status !== "matched" ||
+      (v.publication !== null && v.checkedAt !== null)) &&
+    (v.status !== "unchecked" || v.checkedAt === null) &&
+    (v.checkedAt === null ||
+      (typeof v.checkedAt === "string" &&
+        Number.isFinite(Date.parse(v.checkedAt)))) &&
+    (v.publication === null || validPublication(v.publication)) &&
+    Array.isArray(v.alternatives) &&
+    v.alternatives.every(
+      (item) =>
+        validPublication(item) &&
+        object(item) &&
+        typeof item.selected === "boolean" &&
+        typeof item.score === "number" &&
+        Number.isFinite(item.score) &&
+        item.score >= 0 &&
+        item.score <= 1,
+    ) &&
+    strings(v.notes)
+  );
+}
+export function validFormattedCitation(v: unknown): v is FormattedCitation {
+  return (
+    object(v) &&
+    typeof v.doi === "string" &&
+    v.doi.length > 0 &&
+    ["apa", "ieee"].includes(String(v.style)) &&
+    typeof v.text === "string" &&
+    v.text.trim().length > 0 &&
+    validPublication(v.publication) &&
+    v.publication.doi === v.doi &&
+    strings(v.notes)
+  );
+}
 export function validDocument(v: unknown): v is ResearchDocument {
   return (
     object(v) &&
@@ -71,14 +129,7 @@ export function validClaim(v: unknown): v is Claim {
     strings(v.limitations) &&
     (v.evidenceReference === undefined ||
       typeof v.evidenceReference === "string") &&
-    (p === null ||
-      (object(p) &&
-        typeof p.title === "string" &&
-        strings(p.authors) &&
-        (p.year === undefined ||
-          (typeof p.year === "number" && Number.isInteger(p.year))) &&
-        (p.doi === undefined || typeof p.doi === "string") &&
-        (p.url === undefined || typeof p.url === "string")))
+    (p === null || validPublication(p))
   );
 }
 export function validReport(v: unknown): v is VerificationReport {
@@ -92,7 +143,16 @@ export function validReport(v: unknown): v is VerificationReport {
     ) &&
     typeof v.generatedAt === "string" &&
     Number.isFinite(Date.parse(v.generatedAt)) &&
-    strings(v.limitations)
+    strings(v.limitations) &&
+    (v.citations === undefined ||
+      (Array.isArray(v.citations) &&
+        v.citations.length <= 150 &&
+        v.citations.every(validCitation) &&
+        v.citations.every(
+          (citation) =>
+            citation.documentId === (v.document as ResearchDocument).id,
+        ))) &&
+    (v.citationDiagnostics === undefined || strings(v.citationDiagnostics))
   );
 }
 export function safeSourceUrl(url?: string): string | undefined {
@@ -271,6 +331,42 @@ function demoDoc(id: string) {
 }
 const docPath = (id: string) => `/api/documents/${encodeURIComponent(id)}`;
 export const api = {
+  async formatCitation(
+    doi: string,
+    style: CitationStyle,
+    signal?: AbortSignal,
+  ) {
+    const path = `/api/citations/format?${new URLSearchParams({ doi, style })}`;
+    const result = checked(
+      await request(path, {}, signal),
+      validFormattedCitation,
+      path,
+    );
+    if (result.style !== style)
+      throw new ApiError(
+        "The citation service returned a different formatting style.",
+      );
+    const expectedDoi = doi
+      .trim()
+      .replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, "")
+      .replace(/^doi:\s*/i, "")
+      .replace(/[.,;:]+$/, "")
+      .toLowerCase();
+    if (result.doi !== expectedDoi)
+      throw new ApiError("The citation service returned a different DOI.");
+    return result;
+  },
+  async resolveCitation(id: string, citationId: string, signal?: AbortSignal) {
+    const path = `${docPath(id)}/citations/${encodeURIComponent(citationId)}/resolve`;
+    const result = checked(
+      await processingRequest(path, id, signal),
+      validCitation,
+      path,
+    );
+    if (result.id !== citationId || result.documentId !== id)
+      throw new ApiError("The backend returned a different reference.");
+    return result;
+  },
   async health(signal?: AbortSignal) {
     if (DEMO_MODE) return { status: "ok", mode: "demo" };
     return checked(
