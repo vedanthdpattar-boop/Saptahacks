@@ -12,7 +12,9 @@
       "migrations_dir": "migrations",
     },
   ],
-  "r2_buckets": [{ "binding": "FILES", "bucket_name": "citeverify-files" }],
+  "kv_namespaces": [
+    { "binding": "FILES_KV", "id": "a1680d8c23604249a3662694e95f8e37" },
+  ],
   "ai": { "binding": "AI" },
   "ratelimits": [
     {

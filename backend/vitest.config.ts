@@ -8,6 +8,7 @@ export default defineConfig({
         compatibilityDate: "2026-11-19",
         d1Databases: ["DB"],
         r2Buckets: ["FILES"],
+        kvNamespaces: ["FILES_KV"],
         bindings: { TEST_MIGRATIONS: await readD1Migrations("./migrations") },
       },
     })),
