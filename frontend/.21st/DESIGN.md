@@ -8,7 +8,7 @@ Generated from project sources at 2026-11-19T20:17:20.806Z.
 - Name: citeverify-frontend
 - Product type: Unknown
 - Stack: react, tailwind-v4, vite
-- Color mode: light
+- Color mode: dark
 - Density: unknown
 
 ## Sources
@@ -27,8 +27,8 @@ Generated from project sources at 2026-11-19T20:17:20.806Z.
 
 ### Colors
 
-- `--muted`: `#5a6b80` (src/index.css)
-- `--border`: `#e0e6ed` (src/index.css)
+- `--muted`: `#bcabb7` (src/index.css)
+- `--border`: `#45303f` (src/index.css)
 
 ### Radius
 
@@ -48,5 +48,6 @@ Generated from project sources at 2026-11-19T20:17:20.806Z.
 
 ## Decisions
 
-- None recorded
+- User requested black, dark pink and yellow.
+- Active loading uses a branded source ring, animated dots and actual analysis stages.
 

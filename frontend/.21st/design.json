@@ -18,14 +18,38 @@
     "instructions": []
   },
   "design": {
-    "colorMode": "light",
+    "colorMode": "dark",
     "colors": {
+      "--navy": {
+        "value": "#100e12",
+        "source": "src/index.css"
+      },
+      "--ink": {
+        "value": "#f5edf2",
+        "source": "src/index.css"
+      },
       "--muted": {
-        "value": "#5a6b80",
+        "value": "#bcabb7",
+        "source": "src/index.css"
+      },
+      "--pink": {
+        "value": "#f39fc5",
+        "source": "src/index.css"
+      },
+      "--yellow": {
+        "value": "#f2d56b",
+        "source": "src/index.css"
+      },
+      "--primary": {
+        "value": "#aa285f",
+        "source": "src/index.css"
+      },
+      "--surface": {
+        "value": "#19151b",
         "source": "src/index.css"
       },
       "--border": {
-        "value": "#e0e6ed",
+        "value": "#45303f",
         "source": "src/index.css"
       }
     },
@@ -59,10 +83,13 @@
       "Illustrations that imply real verification results"
     ]
   },
-  "decisions": [],
+  "decisions": [
+    "User requested black, dark pink and yellow.",
+    "Use continuous motion only for decorative illustrations and active loading indicators."
+  ],
   "evidence": [
     {
-      "fact": "design.colorMode:light",
+      "fact": "design.colorMode:dark",
       "source": "src/index.css"
     },
     {
