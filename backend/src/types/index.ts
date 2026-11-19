@@ -1,6 +1,7 @@
 export interface Bindings {
   DB: D1Database;
-  FILES: R2Bucket;
+  FILES?: R2Bucket;
+  FILES_KV?: KVNamespace;
   AI: Ai;
   API_RATE_LIMITER: RateLimit;
   RESEARCH_RATE_LIMITER: RateLimit;
