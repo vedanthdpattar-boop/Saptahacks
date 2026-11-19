@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "project": {
+    "name": "citeverify-frontend",
+    "productType": null,
+    "stack": [
+      "react",
+      "tailwind-v4",
+      "vite"
+    ]
+  },
+  "sources": {
+    "tokens": [
+      "src/index.css"
+    ],
+    "components": [],
+    "assets": [],
+    "instructions": []
+  },
+  "design": {
+    "colorMode": "light",
+    "colors": {
+      "--muted": {
+        "value": "#5a6b80",
+        "source": "src/index.css"
+      },
+      "--border": {
+        "value": "#e0e6ed",
+        "source": "src/index.css"
+      }
+    },
+    "typography": {},
+    "spacing": {},
+    "radius": {
+      "--radius": {
+        "value": "12px",
+        "source": "src/index.css"
+      }
+    },
+    "shadows": {},
+    "motion": {
+      "entrance": "180ms opacity with ease-out",
+      "continuous": "24\u201348 second linear CSS orbit rotation"
+    },
+    "density": "unknown"
+  },
+  "components": {
+    "installed": [],
+    "preferredPrimitives": [],
+    "patterns": []
+  },
+  "constraints": {
+    "must": [
+      "Keep scientific results stationary and traceable.",
+      "Respect prefers-reduced-motion; provide pause for continuous decoration."
+    ],
+    "avoid": [
+      "New animation dependencies",
+      "Illustrations that imply real verification results"
+    ]
+  },
+  "decisions": [],
+  "evidence": [
+    {
+      "fact": "design.colorMode:light",
+      "source": "src/index.css"
+    },
+    {
+      "fact": "design.tokens",
+      "source": "src/index.css"
+    },
+    {
+      "fact": "project.stack:react",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:tailwind-v4",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:vite",
+      "source": "package.json"
+    }
+  ],
+  "generatedAt": "2026-11-19T20:17:20.806Z"
+}
