@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, Link, useMatch } from "react-router-dom";
 import {
   ArrowUpRight,
@@ -16,6 +16,7 @@ import { DemoNotice, Logo } from "./Common";
 import { DEMO_MODE } from "../services/api";
 export function Layout() {
   const [open, setOpen] = useState(false);
+  const wasOpen = useRef(false);
   const location = useLocation();
   const match = useMatch("/documents/:id/*");
   const documentId =
@@ -26,9 +27,11 @@ export function Layout() {
     window.scrollTo(0, 0);
   }, [location.pathname]);
   useEffect(() => {
-    if (open) document.querySelector<HTMLAnchorElement>(".sidebar a")?.focus();
-    else if (document.activeElement?.closest(".sidebar"))
+    if (open)
+      document.querySelector<HTMLButtonElement>(".sidebar-close")?.focus();
+    else if (wasOpen.current)
       document.querySelector<HTMLButtonElement>(".mobile-menu")?.focus();
+    wasOpen.current = open;
   }, [open]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -72,6 +75,13 @@ export function Layout() {
       </a>
       <aside className={`sidebar ${open ? "is-open" : ""}`}>
         <Logo />
+        <button
+          className="icon-button sidebar-close"
+          aria-label="Close navigation"
+          onClick={() => setOpen(false)}
+        >
+          <X />
+        </button>
         <div className="sidebar-label">Research workspace</div>
         <nav aria-label="Main navigation">
           {nav.map(([to, label, Icon]) => (
@@ -101,15 +111,15 @@ export function Layout() {
           </div>
         </div>
       </aside>
-      <div className="app-body">
+      <div className="app-body" inert={open}>
         <header className="app-topbar">
           <button
             className="icon-button mobile-menu"
-            aria-label={open ? "Close navigation" : "Open navigation"}
+            aria-label="Open navigation"
             aria-expanded={open}
-            onClick={() => setOpen(!open)}
+            onClick={() => setOpen(true)}
           >
-            {open ? <X /> : <Menu />}
+            <Menu />
           </button>
           <span className="breadcrumb">
             Workspace <span>/</span>{" "}
