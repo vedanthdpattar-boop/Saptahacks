@@ -1,6 +1,6 @@
 # CiteVerify backend
 
-The Hono Worker stores uploaded PDFs and extracted text privately in Cloudflare KV (or an optional R2 binding), keeps document-scoped claims and verification records in D1, resolves citations with Crossref and OpenAlex, retrieves identifiable open-access full text, and compares exact quotations with Workers AI or Gemini. The existing React frontend connects through its API service; its pages, components, styles and assets are unchanged.
+The Hono Worker stores uploaded PDFs and extracted text privately in Cloudflare KV (or an optional R2 binding), keeps document-scoped claims and verification records in D1, resolves citations with Crossref and OpenAlex, retrieves identifiable open-access full text, and compares exact quotations with Workers AI or Gemini. The existing React frontend connects through its API service; it includes independent bibliography checking and an APA/IEEE DOI generator.
 
 ## Current readiness
 
@@ -217,3 +217,10 @@ Make future commits on the branch that owns the files. Do not commit dependencie
 - [Crossref REST API](https://www.crossref.org/documentation/retrieve-metadata/rest-api/)
 - [OpenAlex API](https://help.openalex.org/api/)
 - [Europe PMC REST API](https://www.ebi.ac.uk/europepmc/webservices/rest/) and [Europe PMC web service guide](https://europepmc.org/RestfulWebService)
+
+
+## Citation studio
+
+The frontend offers both bibliography metadata checks and citation generation. All extracted references remain reviewable even when no scientific claims were found. Checks display printed details beside registry metadata, alternatives and title/year differences. They do not label metadata matching as claim support. The generator uses Crossref metadata and the DOI Foundation formatting service for APA 7 and IEEE, with copy and plain-text download. See [API.md](API.md) for routes, privacy and provider limits.
+
+The source illustration uses CSS rotation/opacity, a pause control and reduced-motion support. Scientific results remain stationary. The design uses existing components and dependencies; no animation library was added.

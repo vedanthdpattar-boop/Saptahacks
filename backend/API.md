@@ -14,6 +14,8 @@ Base origin: `http://localhost:8787` locally; `https://citeverify-api.citeverify
 | GET    | `/api/documents/:id/claims`      | Document token        | Array of extracted claim DTOs                |
 | GET    | `/api/claims/:id`                | Owning document token | Claim, citations and evidence                |
 | POST   | `/api/claims/:id/verify`         | Owning document token | Idempotent stored verification               |
+| POST   | `/api/documents/:id/citations/:citationId/resolve` | Document token | Refresh one extracted reference’s metadata match |
+| GET    | `/api/citations/format?doi=...&style=apa` | None | APA or IEEE text from registered DOI metadata |
 | GET    | `/api/documents/:id/report`      | Document token        | Traceable report and summary counts          |
 
 Protected calls use `Authorization: Bearer <accessToken>`. Tokens are not query parameters. A different document's token never authorizes a claim or job. UUID path parameters are validated. GET endpoints do not start processing or mutate progress.
@@ -179,7 +181,7 @@ curl "$CITEVERIFY_API/api/documents/$CITEVERIFY_DOCUMENT_ID/report" \
   --header "Authorization: Bearer $CITEVERIFY_ACCESS_TOKEN"
 ```
 
-The response includes `document`, `claims`, `generatedAt`, `limitations`, `status`, `citationDiagnostics` and `summary`. A shortened summary for the synthetic example:
+The response includes `document`, `claims`, `citations`, `generatedAt`, `limitations`, `status`, `citationDiagnostics` and `summary`. A shortened summary for the synthetic example:
 
 ```json
 {
@@ -239,3 +241,12 @@ The response includes `document`, `claims`, `generatedAt`, `limitations`, `statu
 External metadata/evidence failures are recorded as limitations when a conservative review finding can still be produced. Failures in claim extraction or AI full-text comparison pause the analysis with an actionable error rather than saving invented results. Successful API responses and errors use `Cache-Control: no-store`.
 
 Browsers must use an exact `FRONTEND_ORIGIN` value. Preflight allows GET, POST, OPTIONS and Content-Type/Authorization headers. Wildcards, paths and trailing slashes are rejected. Native limits are approximate per Cloudflare location; there are no instance-local rate counters.
+
+
+## Independent citation checks and formatting
+
+The report’s `citations` array includes every extracted bibliography entry, including entries not mapped to claims. Each entry has `id`, `documentId`, `key`, `referenceText`, parsed DOI/title/authors/year, `status`, `checkedAt`, `publication`, `alternatives` and `notes`. Status is `unchecked`, `matched` or `needs_review`. Differences in printed title/year require review; differing online-first and issue dates can be legitimate. A metadata match does not establish evidential support, and no match does not establish fabrication.
+
+After extraction is complete, POST `/api/documents/:id/citations/:citationId/resolve` with the owning document’s Bearer token. It refreshes one reference using the existing publication cache and returns the updated citation object. A document lease serializes it with analysis mutations. It never reruns evidence AI or changes saved claim verdicts. Unknown/cross-document references return 404; incomplete extraction returns 409. The frontend checks unchecked references sequentially and supports cancellation with saved progress.
+
+GET `/api/citations/format?doi=10.1038%2Fnature14539&style=apa` is public and rate-limited. Use `style=ieee` for IEEE. It confirms Crossref metadata and retrieves plain text from the DOI Foundation’s `https://citation.doi.org/format` service with bounded HTTPS requests. The response contains `doi`, `style`, `text`, `publication` and `notes`. IEEE’s `[1]` is a placeholder to renumber for the document. No user document/token is sent for formatting. This version requires a Crossref-indexed DOI; manual references, arbitrary webpages and non-DOI books are outside its scope. Invalid DOI/style returns 400, missing metadata 404, malformed format 502, and external failures return actionable errors with no generated citation.
