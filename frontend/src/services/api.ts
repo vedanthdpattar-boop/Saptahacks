@@ -207,14 +207,14 @@ async function request(
   } catch (error) {
     if (signal?.aborted) throw error;
     throw new ApiError(
-      `Could not reach ${path}. Check that the backend is running, allows this origin through CORS, and responds within 120 seconds.`,
+      "Could not reach the service. Check your connection and try again.",
     );
   }
   if (!response.ok) {
     const body: unknown = await response.json().catch(() => null);
     const error = object(body) && object(body.error) ? body.error : undefined;
     throw new ApiError(
-      `${path} returned HTTP ${response.status}. ${typeof error?.message === "string" ? error.message.slice(0, 1000) : "The backend could not complete this request."} No demo results have been substituted.`,
+      `${typeof error?.message === "string" ? error.message.slice(0, 1000) : "This request could not be completed. Please retry."} (HTTP ${response.status})`,
       response.status,
       typeof error?.code === "string" ? error.code : undefined,
     );
