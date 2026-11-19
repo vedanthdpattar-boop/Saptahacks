@@ -200,12 +200,23 @@ test("mobile and tablet layouts stay inside the viewport", async ({ page }) => {
 test("live unavailable backend shows an error and no demo findings", async ({
   page,
 }) => {
+  // Synthetic session token lets this test reach the intentionally unavailable API.
+  await page.addInitScript(() =>
+    sessionStorage.setItem(
+      "citeverify.documentToken.real-document",
+      "k".repeat(43),
+    ),
+  );
   await page.route("http://localhost:8787/**", (route) =>
     route.fulfill({
-      status: 404,
+      status: route.request().method() === "OPTIONS" ? 204 : 404,
       contentType: "application/json",
-      body: "{}",
-      headers: { "access-control-allow-origin": "*" },
+      body: route.request().method() === "OPTIONS" ? "" : "{}",
+      headers: {
+        "access-control-allow-origin": "http://127.0.0.1:4174",
+        "access-control-allow-headers": "authorization,content-type",
+        "access-control-allow-methods": "GET,POST,OPTIONS",
+      },
     }),
   );
   await page.goto("http://127.0.0.1:4174/documents/real-document/results");
