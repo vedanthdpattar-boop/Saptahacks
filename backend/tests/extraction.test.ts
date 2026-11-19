@@ -16,6 +16,17 @@ import { Repository } from "../src/database/repository";
 import type { AiProvider } from "../src/ai/ai.provider";
 import { bindings, syntheticText, upload } from "./helpers";
 import { syntheticExtraction } from "./fixtures";
+const wrappedClaim = "The synthetic rate was 2.5%\r\n(n=30).";
+const wrappedTitle = "Synthetic evidence with\r\nwrapped lines";
+const wrappedReference = `[1] Smith, A. (2023). ${wrappedTitle}. Journal. doi:10.9999/wrapped`;
+const wrappedText = `${wrappedClaim} [1]\r\nReferences\r\n${wrappedReference}`;
+const wrappedExtraction = {
+  claims: [
+    { ...syntheticExtraction.claims[0], text: wrappedClaim.replace(/\s+/g, " ") },
+    { ...syntheticExtraction.claims[0], text: wrappedTitle.replace(/\s+/g, " ") },
+  ],
+  citations: [{ key: "[1]", referenceText: wrappedReference.slice(4).replace(/\s+/g, " ") }],
+};
 afterEach(() => vi.restoreAllMocks());
 describe("exact extraction and citation association", () => {
   it("normalizes common keys, groups, narrative references and DOI punctuation", () => {
@@ -103,6 +114,45 @@ describe("exact extraction and citation association", () => {
       extractClaims({ text: syntheticText, page: null }, provider),
     ).rejects.toMatchObject({ code: "invalid_ai_output" });
     expect(generate).toHaveBeenCalledTimes(2);
+  });
+  it("recovers exact PDF whitespace and printed reference markers, excluding bibliography claims", async () => {
+    const generate = vi.fn().mockResolvedValue(wrappedExtraction);
+    const result = await extractClaims(
+      { text: wrappedText, page: null }, { model: "synthetic-model", generate },
+    );
+    expect(result.claims.map((claim) => claim.text)).toEqual([wrappedClaim]);
+    expect(result.citations).toEqual([{ key: "[1]", referenceText: wrappedReference }]);
+    expect(parseReferences("synthetic", wrappedText).citations[0].title)
+      .toBe("Synthetic evidence with wrapped lines");
+    expect(generate).toHaveBeenCalledTimes(1);
+  });
+  it("uses full-document reference boundaries for partial chunks and retains quotations also in the body", async () => {
+    const generate = vi.fn().mockResolvedValue({ ...wrappedExtraction, citations: [] });
+    const provider = { model: "synthetic-model", generate };
+    const chunk = { text: wrappedTitle, page: null };
+    generate.mockResolvedValue({ claims: [wrappedExtraction.claims[1]], citations: [] });
+    expect((await extractClaims(chunk, provider, wrappedText)).claims).toEqual([]);
+    expect((await extractClaims(chunk, provider, `${wrappedTitle}\r\n${wrappedText}`)).claims)
+      .toHaveLength(1);
+  });
+  it.each(["2.6%", "2x5%", "2.5% (n=31)"])("rejects changed literal content: %s", async (changed) => {
+    const generate = vi.fn().mockResolvedValue({
+      ...wrappedExtraction,
+      claims: [{ ...wrappedExtraction.claims[0], text: `The synthetic rate was ${changed} (n=30).` }],
+    });
+    await expect(extractClaims(
+      { text: wrappedText, page: null }, { model: "synthetic-model", generate },
+    )).rejects.toMatchObject({ code: "invalid_ai_output" });
+    expect(generate).toHaveBeenCalledTimes(2);
+  });
+  it("rejects a recovered reference assigned to a different printed key", async () => {
+    const generate = vi.fn().mockResolvedValue({
+      ...wrappedExtraction,
+      citations: [{ ...wrappedExtraction.citations[0], key: "[2]" }],
+    });
+    await expect(extractClaims(
+      { text: wrappedText, page: null }, { model: "synthetic-model", generate },
+    )).rejects.toMatchObject({ code: "invalid_ai_output" });
   });
   it("persists mappings and rejects model-guessed pages; repeated extraction is idempotent", async () => {
     const run = vi.fn().mockResolvedValue({ response: syntheticExtraction });
