@@ -9,7 +9,7 @@ test("public pages are separate and the sample finding is interactive", async ({
     .click();
   await expect(page.locator(".preview-finding")).toContainText("p = 0.31");
   await expect(page.locator(".interactive-preview")).toContainText(
-    "Fictional demo",
+    "Illustrative demo",
   );
   await page.getByRole("link", { name: "How it works", exact: true }).click();
   await expect(page).toHaveURL(/\/how-it-works$/);
@@ -35,7 +35,7 @@ test("navigation, search, filter, comparison, graph and report work", async ({
   await page.goto("/");
   await expect(
     page.getByRole("heading", {
-      name: "Every Citation Has a Story. Verify It.",
+      name: "Read the research. Follow the evidence.",
     }),
   ).toBeVisible();
   await page.getByRole("link", { name: "Workspace", exact: true }).click();
