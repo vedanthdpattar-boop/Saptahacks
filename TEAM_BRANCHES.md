@@ -4,7 +4,7 @@ The implementation is divided into three component branches based on the publish
 
 | Branch | Responsibility |
 | --- | --- |
-| `feature/backend` | Hono routes, private R2 uploads, access tokens, request limits, report DTOs, frontend API integration, Worker/package configuration, shared types, HTTP utilities, API/workflow tests and setup documentation |
+| `feature/backend` | Hono routes, private KV/R2 uploads, access tokens, request limits, report DTOs, frontend API integration, Worker/package configuration, shared types, HTTP utilities, API/workflow tests and setup documentation |
 | `feature/database` | D1 migration, parameterized repository operations, ownership constraints, indexes and D1 test migration setup |
 | `feature/ai` | AI providers/prompts, exact claim extraction, citation parsing/mapping, publication matching, open-access evidence retrieval, conservative verification, AI response schemas and synthetic research/provider tests |
 
@@ -25,8 +25,7 @@ From a fresh checkout:
 
 ```sh
 git fetch origin
-git switch -c feature/integration origin/feature/frontend
-git merge origin/feature/backend origin/feature/database origin/feature/ai
+git switch --track origin/feature/integration
 cd backend
 npm ci
 npm run migrate:local
@@ -38,6 +37,6 @@ npm run dev
 
 If `feature/integration` already exists, switch to it and merge the current component branches. Keep component branches as the owners of their changes; do not merge the entire integration branch back into each component just to run it.
 
-See `backend/README.md` and `backend/API.md` on the assembled branch for Cloudflare/AI setup and frontend live-mode configuration. Vercel has not been deployed, and live AI/production deployment still require account credentials.
+See `backend/README.md` and `backend/API.md` on the assembled branch for Cloudflare/AI setup and frontend live-mode configuration. The Vercel website is deployed at https://error404-beryl-eight.vercel.app and tracks feature/integration. Its API is live at https://citeverify-api.citeverify-backend.workers.dev and uses private KV because R2 requires a payment method. A published research excerpt completed the live AI and report workflow. Deployment fixes are on `feature/integration`; teammates should use that current assembled branch for the working application.
 
 The original complete commit `aee954ba7fcf55bfb1faff02fdf519d62354a049` is preserved locally as `backup/citeverify-complete`. The local integration branch retains the assembled application. Main and the frontend branch are unchanged.
