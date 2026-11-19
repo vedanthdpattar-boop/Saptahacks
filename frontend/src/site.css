@@ -1628,7 +1628,7 @@ input {
 .citation-generator { max-width: none; padding: 30px; }
 .citation-generator input { min-height: 50px; }
 .citation-example { display: inline-flex; align-items: center; gap: 6px; justify-self: start; border: 0; background: transparent; color: #f2d56b; font-size: 12px; padding: 3px 0; }
-.citation-result blockquote { background: #19151b; border-left: 3px solid #97647e; padding: 22px; border-radius: 0 10px 10px 0; font-size: 16px; }
+.citation-result blockquote { background: #19151b; border: 1px solid var(--border); padding: 22px; border-radius: 10px; font-size: 16px; }
 .citation-list-tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .citation-list-tools .search-field { flex: 1; min-width: 220px; }
 .citation-orbit { margin: 0 0 20px; position: relative; overflow: hidden; border-radius: 16px; background: #100e12; color: #f2d56b; padding: 24px; display: flex; flex-direction: column; justify-content: center; }
