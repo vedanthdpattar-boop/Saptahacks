@@ -16,6 +16,7 @@ import {
 import { Badge, Confidence } from "../components/Common";
 import { createDemoReport, demoDocument } from "../mocks/demoData";
 import { DEMO_MODE } from "../services/api";
+import { CitationOrbit } from "../components/CitationOrbit";
 
 const sampleClaims = createDemoReport(demoDocument).claims;
 const previewVerdicts = [0, 1, 3];
@@ -65,7 +66,9 @@ export function LandingPage() {
         <div className="landing-wrap home-grid">
           <div className="home-copy">
             <div className="home-kicker">
-              <span className="home-kicker-mark"><Sparkles size={14} /></span>
+              <span className="home-kicker-mark">
+                <Sparkles size={14} />
+              </span>
               AI-assisted research review
             </div>
             <h1>
@@ -98,27 +101,40 @@ export function LandingPage() {
             <div className="preview-glow" aria-hidden="true" />
             <div className="interactive-preview-top">
               <span className="preview-app-title">
-                <span className="preview-file-icon"><BookOpenCheck size={17} /></span>
+                <span className="preview-file-icon">
+                  <BookOpenCheck size={17} />
+                </span>
                 <span>
                   <strong>Research review</strong>
                   <small>One paper · 6 claims found</small>
                 </span>
               </span>
-              <span className="demo-chip"><span /> Illustrative demo</span>
+              <span className="demo-chip">
+                <span /> Illustrative demo
+              </span>
             </div>
 
             <div className="preview-progress" aria-label="Review workflow">
-              <span className="complete"><Check size={12} /></span>
+              <span className="complete">
+                <Check size={12} />
+              </span>
               <i />
-              <span className="complete"><Check size={12} /></span>
+              <span className="complete">
+                <Check size={12} />
+              </span>
               <i />
-              <span className="current"><Activity size={13} /></span>
+              <span className="current">
+                <Activity size={13} />
+              </span>
               <i />
               <span>4</span>
               <small>Evidence review</small>
             </div>
 
-            <div className="verdict-picker" aria-label="Choose a sample verdict">
+            <div
+              className="verdict-picker"
+              aria-label="Choose a sample verdict"
+            >
               {previewVerdicts.map((index) => (
                 <button
                   key={index}
@@ -147,7 +163,9 @@ export function LandingPage() {
               </div>
               <div className="evidence-preview">
                 <div className="evidence-preview-heading">
-                  <span className="evidence-spark"><Sparkles size={13} /></span>
+                  <span className="evidence-spark">
+                    <Sparkles size={13} />
+                  </span>
                   <span>WHAT THE SOURCE SAYS</span>
                   <span className="evidence-match">Source matched</span>
                 </div>
@@ -183,18 +201,60 @@ export function LandingPage() {
             <p>More clarity at every step of a literature review.</p>
           </div>
           <div className="principle-item">
-            <span className="principle-icon"><FileSearch size={18} /></span>
-            <span><strong>6 verdict types</strong><small>Nuance beyond yes or no</small></span>
+            <span className="principle-icon">
+              <FileSearch size={18} />
+            </span>
+            <span>
+              <strong>6 verdict types</strong>
+              <small>Nuance beyond yes or no</small>
+            </span>
           </div>
           <div className="principle-item">
-            <span className="principle-icon"><GitBranch size={18} /></span>
-            <span><strong>Evidence you can trace</strong><small>Source passages stay visible</small></span>
+            <span className="principle-icon">
+              <GitBranch size={18} />
+            </span>
+            <span>
+              <strong>Evidence you can trace</strong>
+              <small>Source passages stay visible</small>
+            </span>
           </div>
           <div className="principle-item">
-            <span className="principle-icon"><ShieldCheck size={18} /></span>
-            <span><strong>Human review included</strong><small>Uncertainty is surfaced</small></span>
+            <span className="principle-icon">
+              <ShieldCheck size={18} />
+            </span>
+            <span>
+              <strong>Human review included</strong>
+              <small>Uncertainty is surfaced</small>
+            </span>
           </div>
         </div>
+      </section>
+
+      <section className="home-citation-studio landing-wrap">
+        <div>
+          <span className="eyebrow">A citation is a starting point</span>
+          <h2>
+            Find the paper.
+            <br />
+            Keep the details right.
+          </h2>
+          <p>
+            Check the references in your research, compare publication details,
+            or turn a DOI into a reference ready for your bibliography.
+          </p>
+          <div className="button-row">
+            <Link className="btn btn-primary" to="/citations">
+              Open citation studio <ArrowRight size={17} />
+            </Link>
+            <Link className="text-link" to="/upload">
+              Check a paper’s references <ArrowUpRight size={16} />
+            </Link>
+          </div>
+          <p className="small muted">
+            APA 7 · IEEE · Source links · Human review
+          </p>
+        </div>
+        <CitationOrbit />
       </section>
 
       <section className="home-capabilities landing-wrap" id="features">
@@ -209,17 +269,23 @@ export function LandingPage() {
           </div>
         </div>
         <div className="capability-grid">
-          {capabilities.map(({ number, icon: Icon, title, description, detail }) => (
-            <article className="capability-card" key={number}>
-              <div className="capability-card-top">
-                <span className="capability-icon"><Icon size={20} /></span>
-                <span className="capability-number">{number}</span>
-              </div>
-              <h3>{title}</h3>
-              <p>{description}</p>
-              <span className="capability-detail"><Check size={13} /> {detail}</span>
-            </article>
-          ))}
+          {capabilities.map(
+            ({ number, icon: Icon, title, description, detail }) => (
+              <article className="capability-card" key={number}>
+                <div className="capability-card-top">
+                  <span className="capability-icon">
+                    <Icon size={20} />
+                  </span>
+                  <span className="capability-number">{number}</span>
+                </div>
+                <h3>{title}</h3>
+                <p>{description}</p>
+                <span className="capability-detail">
+                  <Check size={13} /> {detail}
+                </span>
+              </article>
+            ),
+          )}
         </div>
       </section>
 
@@ -227,7 +293,9 @@ export function LandingPage() {
         <div className="landing-wrap workflow-layout">
           <div className="workflow-copy">
             <span className="eyebrow">From PDF to perspective</span>
-            <h2>Your paper stays readable. The evidence gets easier to follow.</h2>
+            <h2>
+              Your paper stays readable. The evidence gets easier to follow.
+            </h2>
             <p>
               Move from a document to a structured review without hiding the
               source material or the limits of an automated check.
@@ -244,7 +312,9 @@ export function LandingPage() {
                   <h3>{title}</h3>
                   <p>{description}</p>
                 </div>
-                {index < workflow.length - 1 && <span className="workflow-connector" />}
+                {index < workflow.length - 1 && (
+                  <span className="workflow-connector" />
+                )}
               </article>
             ))}
           </div>
@@ -258,7 +328,9 @@ export function LandingPage() {
           <div className="final-cta-copy">
             <span className="eyebrow">Start with one paper</span>
             <h2>Make your next research review more transparent.</h2>
-            <p>Upload a text-based PDF and inspect each finding at your own pace.</p>
+            <p>
+              Upload a text-based PDF and inspect each finding at your own pace.
+            </p>
           </div>
           <Link className="btn btn-primary home-primary" to="/upload">
             <Upload size={16} /> Start a paper review <ArrowRight size={16} />

@@ -29,7 +29,12 @@ export function EvidenceGraphPage() {
   const claim =
     report.claims.find((c) => c.id === params.get("claim")) ?? report.claims[0];
   if (!claim)
-    return <NoClaimsState document={report.document} />;
+    return (
+      <NoClaimsState
+        document={report.document}
+        citationCount={report.citations?.length}
+      />
+    );
   const nodes = [
     {
       label: "Original claim",

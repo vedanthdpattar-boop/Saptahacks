@@ -43,7 +43,13 @@ export function ResultsPage() {
   );
   if (error) return <ErrorState message={error} retry={retry} />;
   if (!report) return <LoadingState />;
-  if (!report.claims.length) return <NoClaimsState document={report.document} />;
+  if (!report.claims.length)
+    return (
+      <NoClaimsState
+        document={report.document}
+        citationCount={report.citations?.length}
+      />
+    );
   return (
     <>
       {report.document.mode === "demo" && !DEMO_MODE && (

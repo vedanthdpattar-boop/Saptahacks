@@ -205,6 +205,7 @@ export function UploadPage() {
             <h2>What happens next</h2>
             <ol className="help-steps">
               <li>Extract statements and citations.</li>
+              <li>Open Citation check to check every extracted reference.</li>
               <li>Find original source publications.</li>
               <li>Compare claims with evidence.</li>
               <li>Generate an explainable report.</li>
