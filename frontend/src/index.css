@@ -16,6 +16,7 @@
   --green: #14734e;
   --amber: #925a08;
   --red: #b63a3a;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 * {
   box-sizing: border-box;
@@ -141,8 +142,8 @@ small,
     background 0.16s,
     transform 0.16s;
 }
-.btn:hover:not(:disabled) {
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover:not(:disabled) { transform: translateY(-1px); }
 }
 .btn:active:not(:disabled) {
   transform: translateY(1px);
@@ -360,6 +361,7 @@ small,
   display: flex;
   flex-direction: column;
   z-index: 25;
+  overflow-y: auto;
 }
 .sidebar .logo {
   color: #f3f7fb;

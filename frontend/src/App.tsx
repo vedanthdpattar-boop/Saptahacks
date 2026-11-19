@@ -12,6 +12,8 @@ import { ResultsPage } from "./pages/ResultsPage";
 import { ClaimDetailsPage } from "./pages/ClaimDetailsPage";
 import { EvidenceGraphPage } from "./pages/EvidenceGraphPage";
 import { ReportPage } from "./pages/ReportPage";
+import { CitationsPage } from "./pages/CitationsPage";
+import { CitationGeneratorPage } from "./pages/CitationGeneratorPage";
 export function App() {
   return (
     <BrowserRouter>
@@ -25,9 +27,14 @@ export function App() {
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/upload" element={<UploadPage />} />
+            <Route path="/citations" element={<CitationGeneratorPage />} />
             <Route path="/analysis" element={<AnalysisPage />} />
             <Route path="/documents/:id/analysis" element={<AnalysisPage />} />
             <Route path="/documents/:id/results" element={<ResultsPage />} />
+            <Route
+              path="/documents/:id/citations"
+              element={<CitationsPage />}
+            />
             <Route
               path="/documents/:id/claims/:claimId"
               element={<ClaimDetailsPage />}

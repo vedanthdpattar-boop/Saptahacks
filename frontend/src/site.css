@@ -888,7 +888,7 @@ input {
   align-items: center;
 }
 .home-copy {
-  animation: home-rise-in 0.7s cubic-bezier(0.2, 0.75, 0.25, 1) both;
+  animation: home-rise-in 0.7s var(--ease-out) both;
 }
 .home-kicker {
   display: inline-flex;
@@ -988,7 +988,7 @@ input {
   background: #fbfdff;
   color: #20384f;
   box-shadow: 0 30px 85px #06101d75, 0 2px 10px #0b1a281a;
-  animation: home-rise-in 0.8s 0.12s cubic-bezier(0.2, 0.75, 0.25, 1) both, preview-float 8s 1s ease-in-out infinite;
+  animation: home-rise-in 0.8s 0.12s var(--ease-out) both;
 }
 .preview-glow {
   position: absolute;
@@ -1127,7 +1127,6 @@ input {
 .preview-finding {
   min-height: 0;
   padding: 15px 22px 18px;
-  animation: claim-change 0.38s ease both;
 }
 .preview-claim-heading {
   display: flex;
@@ -1545,17 +1544,9 @@ input {
   from { opacity: 0; transform: translateY(22px); }
   to { opacity: 1; transform: translateY(0); }
 }
-@keyframes preview-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-7px); }
-}
-@keyframes claim-change {
-  from { opacity: 0; transform: translateY(7px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 @keyframes status-breathe {
-  0%, 100% { box-shadow: 0 0 0 0 #57b9ae00; }
-  50% { box-shadow: 0 0 0 5px #57b9ae20; }
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
 }
 @media (max-width: 1050px) {
   .home-grid {
@@ -1614,4 +1605,68 @@ input {
   .verdict-picker button {
     transition: none !important;
   }
+}
+.citation-scope { color: var(--muted); margin: 20px 0; }
+.citation-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 24px 0; }
+.citation-stat-grid .panel { padding: 22px; display: grid; gap: 8px; }
+.citation-stat-grid strong { font-size: 28px; }
+.citation-list { display: grid; gap: 20px; }
+.citation-card { padding: 24px; margin-bottom: 20px; overflow-wrap: anywhere; }
+.citation-card h3 { margin: 16px 0 8px; }
+.citation-card p { margin: 8px 0; }
+.citation-card .button-row { margin-top: 20px; }
+.citation-comparison-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.citation-reference { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; }
+.citation-generator { display: grid; gap: 12px; max-width: 760px; }
+.citation-generator input, .citation-generator select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: white; color: inherit; font: inherit; }
+.citation-generator .btn { justify-self: start; margin-top: 8px; }
+.citation-studio-layout, .home-citation-studio { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 28px; align-items: stretch; }
+.citation-studio-layout { margin-top: 28px; }
+.studio-form-heading { margin-bottom: 12px; }
+.studio-form-heading h2 { font-size: 28px; letter-spacing: -.035em; margin-top: 8px; }
+.studio-form-heading p { color: var(--muted); line-height: 1.6; }
+.citation-generator { max-width: none; padding: 30px; }
+.citation-generator input { min-height: 50px; }
+.citation-example { display: inline-flex; align-items: center; gap: 6px; justify-self: start; border: 0; background: transparent; color: #09638e; font-size: 12px; padding: 3px 0; }
+.citation-result blockquote { background: #f1f8fa; border-left: 3px solid #168da0; padding: 22px; border-radius: 0 10px 10px 0; font-size: 16px; }
+.citation-list-tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.citation-list-tools .search-field { flex: 1; min-width: 220px; }
+.citation-orbit { margin: 0 0 20px; position: relative; overflow: hidden; border-radius: 16px; background: #10293a; color: #e6f4f7; padding: 24px; display: flex; flex-direction: column; justify-content: center; }
+.orbit-heading { display: flex; justify-content: space-between; gap: 10px; font-size: 10px; color: #9ec4d0; }
+.orbit-heading .eyebrow { color: #82d4dd; }
+.orbit-stage { position: relative; width: min(100%, 310px); aspect-ratio: 1; margin: 10px auto; }
+.orbit-grid { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, #2389a625, transparent 70%); }
+.orbit-track { position: absolute; border: 1px solid #5b9fb14d; border-radius: 50%; animation: citation-orbit-turn 36s linear infinite; }
+.orbit-track-outer { inset: 6%; border-style: dashed; }
+.orbit-track-middle { inset: 19%; animation-duration: 48s; animation-direction: reverse; }
+.orbit-track-inner { inset: 32%; animation-duration: 24s; animation-delay: -8s; }
+.orbit-satellite { display: grid; place-items: center; position: absolute; width: 40px; height: 40px; left: -20px; top: calc(50% - 20px); border-radius: 12px; color: #7bddde; background: #153e50; border: 1px solid #589fb369; box-shadow: 0 5px 16px #04152255; }
+.orbit-core { position: absolute; inset: 37%; display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid #6dd6d780; background: #16495d; color: #9aedec; box-shadow: 0 0 35px #259aad35; }
+.orbit-core span { font-size: 8px; letter-spacing: .16em; }
+.orbit-core svg { animation: citation-orbit-breathe 3s linear infinite; }
+.citation-orbit figcaption strong { font-size: 17px; letter-spacing: -.02em; }
+.citation-orbit figcaption p { color: #adcad5; font-size: 12px; line-height: 1.65; margin: 8px 0 14px; }
+.orbit-motion-control { display: inline-flex; align-items: center; gap: 7px; border: 1px solid #5a8da061; border-radius: 6px; background: transparent; color: #c3e0e7; padding: 7px 10px; font-size: 11px; align-self: start; }
+.citation-orbit.is-paused .orbit-track, .citation-orbit.is-paused .orbit-core svg { animation-play-state: paused; }
+.home-citation-studio { padding-top: 64px; padding-bottom: 32px; align-items: center; gap: 80px; }
+.home-citation-studio h2 { font-size: clamp(30px, 3.5vw, 44px); line-height: 1.15; letter-spacing: -.045em; margin: 14px 0 20px; }
+.home-citation-studio p { color: var(--muted); line-height: 1.7; max-width: 470px; }
+.home-citation-studio .button-row { margin: 24px 0; }
+.workspace-view { animation: workspace-appear 180ms var(--ease-out); }
+.citation-result { transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out); }
+@starting-style { .citation-result { opacity: 0; transform: translateY(8px); } }
+@keyframes citation-orbit-turn { to { transform: rotate(360deg); } }
+@keyframes citation-orbit-breathe { 0%, 100% { opacity: .65; } 50% { opacity: 1; } }
+@keyframes workspace-appear { from { opacity: .65; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .orbit-track, .orbit-core svg, .workspace-view { animation: none; }
+  .citation-result { transform: none; transition: opacity 160ms ease; }
+  .orbit-motion-control { display: none; }
+}
+@media (max-width: 768px) {
+  .citation-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .citation-comparison-grid { grid-template-columns: 1fr; }
+  .citation-card { padding: 18px; }
+  .citation-studio-layout, .home-citation-studio { grid-template-columns: 1fr; gap: 20px; }
+  .home-citation-studio { padding-top: 36px; }
 }
