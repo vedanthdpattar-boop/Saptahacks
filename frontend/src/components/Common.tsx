@@ -3,7 +3,6 @@ import {
   ArrowRight,
   Check,
   FileText,
-  LoaderCircle,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
@@ -129,16 +128,41 @@ export function ErrorState({
     </div>
   );
 }
+export function SourceLoader({ paused = false }: { paused?: boolean }) {
+  return (
+    <div
+      className={`source-loader ${paused ? "is-paused" : ""}`}
+      aria-hidden="true"
+    >
+      <span className="source-loader-ring" />
+      <span className="source-loader-ring inner" />
+      <span className="source-loader-core">
+        <ShieldCheck size={30} />
+      </span>
+    </div>
+  );
+}
 export function LoadingState({
   label = "Loading verification report",
 }: {
   label?: string;
 }) {
   return (
-    <div className="loading-state" role="status">
-      <LoaderCircle className="spin" size={28} />
-      <p>{label}…</p>
-    </div>
+    <section
+      className="panel loading-state branded-loading"
+      role="status"
+      aria-busy="true"
+    >
+      <span className="eyebrow">CiteVerify AI · Research workspace</span>
+      <SourceLoader />
+      <h2>{label}…</h2>
+      <p>Your saved research details are on their way.</p>
+      <div className="loading-dots" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+    </section>
   );
 }
 export function EmptyState({
